@@ -6,8 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from platformdirs import user_config_dir
-from pydantic import BaseModel, Field, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field, SecretStr, field_validator, ConfigDict
 
 
 class ConfigError(Exception):
@@ -45,13 +44,11 @@ class ConfigModel(BaseModel):
         return v
 
 
-class Config(BaseSettings):
+class Config(BaseModel):
     """Main configuration class with multiple source support."""
 
-    model_config = SettingsConfigDict(
-        env_prefix="CLICKUP_MCP_",
-        env_file=".env",
-        case_sensitive=False,
+    model_config = ConfigDict(
+        extra="ignore",
     )
 
     api_key: str = Field(description="ClickUp API key")
@@ -67,10 +64,14 @@ class Config(BaseSettings):
         # Try to load from config files first
         config_data = self._load_from_files()
 
-        # Merge with any provided kwargs
+        # Add environment variables with our prefix
+        env_data = self._get_filtered_env_vars()
+        config_data.update(env_data)
+
+        # Merge with any provided kwargs (highest priority)
         config_data.update(kwargs)
 
-        # Let pydantic_settings handle env vars and final validation
+        # Use BaseModel init to avoid BaseSettings environment processing
         super().__init__(**config_data)
 
         # Validate we have required fields
@@ -109,6 +110,20 @@ class Config(BaseSettings):
                     raise ConfigError(f"Error loading config from {config_path}: {e}") from e
 
         return {}
+
+    def _get_filtered_env_vars(self) -> Dict[str, Any]:
+        """Get environment variables with our prefix only."""
+        env_data = {}
+        prefix = "CLICKUP_MCP_"
+        
+        # Only process environment variables with our specific prefix
+        for key, value in os.environ.items():
+            if key.startswith(prefix) and value:
+                # Remove prefix and convert to lowercase for field mapping
+                field_name = key[len(prefix):].lower()
+                env_data[field_name] = value
+                
+        return env_data
 
     def save_to_file(self, path: Optional[Path] = None) -> None:
         """Save current configuration to file."""
