@@ -10,6 +10,7 @@ Built by the [Diversio](https://diversio.com) team for streamlined AI-powered ta
 - **Task CRUD Operations** - Create, read, update, and delete tasks
 - **Task Organization** - Navigate spaces, folders, and lists
 - **Task Search & Filtering** - Find tasks by various criteria
+- **Comments & Collaboration** - Read and create comments on tasks
 - **User & Assignment Management** - List users, find by name/email, assign to tasks
 - **Status Management** - Update and track task statuses
 
@@ -200,7 +201,7 @@ VS Code now has built-in MCP support with GitHub Copilot and Agent Mode. Add to 
 2. In VS Code, ask GitHub Copilot: *"Can you list my ClickUp spaces using MCP tools?"*
 3. Check MCP server status with Command Palette → **"MCP: List Servers"**
 
-## Available Tools (24 Tools)
+## Available Tools (28 Tools)
 
 ### 📝 Task Management
 - `create_task` - Create new tasks
@@ -215,6 +216,7 @@ VS Code now has built-in MCP support with GitHub Copilot and Agent Mode. Add to 
 - `search_tasks` - Search tasks by text and criteria
 - `get_subtasks` - Get all subtasks of a parent
 - `get_task_comments` - Get comments on tasks
+- `create_task_comment` - Create comments on tasks
 
 ### 👥 Assignment & Status
 - `get_task_status` - Get current task status
@@ -240,6 +242,11 @@ VS Code now has built-in MCP support with GitHub Copilot and Agent Mode. Add to 
 - `get_team_workload` - See task distribution across team members
 - `get_task_analytics` - Get velocity metrics and completion rates
 
+### 👤 User Management  
+- `list_users` - List all users in workspace
+- `get_current_user` - Get current authenticated user details
+- `find_user_by_name` - Find users by name or email
+
 ## Example Usage
 
 ### Natural Language Commands
@@ -253,6 +260,9 @@ Ask your AI assistant:
 "Log 2 hours on task gh-123 for debugging"
 "What's our team's current workload?"
 "Create a task chain: Design → Implement → Test → Deploy"
+"Add a comment to task GH-3761 saying 'testing complete'"
+"Get all comments on the bug report task"
+"Comment on task abc123 and assign it to John"
 ```
 
 ### Task Templates
@@ -276,7 +286,7 @@ Ask your AI assistant:
 ### Running Tests
 
 ```bash
-# Run all tests (48 tests)
+# Run all tests (62 tests)
 uv run pytest
 
 # Run with coverage
@@ -316,6 +326,16 @@ uv run clickup-mcp test-connection
 ```bash
 # Run with debug logging
 uv run clickup-mcp --debug
+```
+
+### Local Testing with Claude Code
+
+```bash
+# Add the server for local testing with Claude Code CLI
+claude mcp add clickup-local -- uv run clickup-mcp
+
+# Then you can test the functionality immediately
+# Example: List spaces, create tasks, add comments, etc.
 ```
 
 ## Technical Limitations

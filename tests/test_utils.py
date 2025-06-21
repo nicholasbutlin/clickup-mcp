@@ -34,6 +34,12 @@ class TestUtils:
         assert parse_task_id("https://app.clickup.com/t/gh123") == ("gh123", None)
         assert parse_task_id("https://app.clickup.com/12345/t/task123") == ("task123", None)
         assert parse_task_id("https://app.clickup.com/t/abc123?view=board") == ("abc123", None)
+        # Test the new format with team ID and custom task ID
+        assert parse_task_id("https://app.clickup.com/t/3647378/GH-3761") == ("GH-3761", None)
+        assert parse_task_id("https://app.clickup.com/t/3647378/868efatce") == ("868efatce", None)
+        # Test that custom IDs from URLs are recognized when patterns provided
+        id_patterns = {"gh": "GitHub Issue"}
+        assert parse_task_id("https://app.clickup.com/t/3647378/GH-3761", id_patterns) == ("GH-3761", "gh")
 
     def test_parse_task_id_hash_format(self):
         """Test parsing hash format task IDs."""

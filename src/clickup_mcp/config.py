@@ -28,9 +28,11 @@ class ConfigModel(BaseModel):
 
     api_key: SecretStr
     default_workspace_id: Optional[str] = None
+    default_team_id: Optional[str] = None
     cache_ttl: int = Field(default=300, description="Cache TTL in seconds")
     id_patterns: Dict[str, str] = Field(
-        default_factory=dict, description="Custom ID patterns like {'gh': 'GitHub Issues'}"
+        default_factory=lambda: {"gh": "GitHub Issues", "GH": "GitHub Issues"},
+        description="Custom ID patterns like {'gh': 'GitHub Issues'}"
     )
 
     @field_validator("api_key")
@@ -54,8 +56,11 @@ class Config(BaseSettings):
 
     api_key: str = Field(description="ClickUp API key")
     default_workspace_id: Optional[str] = None
+    default_team_id: Optional[str] = None
     cache_ttl: int = 300
-    id_patterns: Dict[str, str] = Field(default_factory=dict)
+    id_patterns: Dict[str, str] = Field(
+        default_factory=lambda: {"gh": "GitHub Issues", "GH": "GitHub Issues"}
+    )
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize config from multiple sources."""
@@ -118,6 +123,9 @@ class Config(BaseSettings):
 
         if self.default_workspace_id:
             config_data["default_workspace_id"] = self.default_workspace_id
+
+        if self.default_team_id:
+            config_data["default_team_id"] = self.default_team_id
 
         if self.id_patterns:
             config_data["id_patterns"] = self.id_patterns

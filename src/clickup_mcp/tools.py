@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, List, Optional
 from mcp.types import Tool
 
 from .client import ClickUpAPIError, ClickUpClient
-from .models import CreateTaskRequest, UpdateTaskRequest
+from .models import CreateTaskRequest, Task, UpdateTaskRequest
 from .utils import format_task_url, parse_duration, parse_task_id
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,7 @@ class ClickUpTools:
             "search_tasks": self.search_tasks,
             "get_subtasks": self.get_subtasks,
             "get_task_comments": self.get_task_comments,
+            "create_task_comment": self.create_task_comment,
             "get_task_status": self.get_task_status,
             "update_task_status": self.update_task_status,
             "get_assignees": self.get_assignees,
@@ -213,6 +214,20 @@ class ClickUpTools:
                         "task_id": {"type": "string", "description": "Task ID"},
                     },
                     "required": ["task_id"],
+                },
+            ),
+            Tool(
+                name="create_task_comment",
+                description="Create a comment on a task",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string", "description": "Task ID"},
+                        "comment_text": {"type": "string", "description": "Comment text"},
+                        "assignee": {"type": "integer", "description": "User ID to assign (optional)"},
+                        "notify_all": {"type": "boolean", "description": "Notify all assignees (default: true)"},
+                    },
+                    "required": ["task_id", "comment_text"],
                 },
             ),
             Tool(
@@ -503,6 +518,48 @@ class ClickUpTools:
 
     # Tool implementations
 
+    async def _resolve_task_id(self, task_id: str, include_subtasks: bool = False) -> Task:
+        """Smart task ID resolution that handles both internal and custom IDs."""
+        # Parse task ID to determine if it might be a custom ID
+        parsed_id, custom_type = parse_task_id(task_id, self.client.config.id_patterns)
+
+        # Try direct lookup first (works for both internal and custom IDs)
+        try:
+            return await self.client.get_task(
+                parsed_id,
+                include_subtasks=include_subtasks
+            )
+        except ClickUpAPIError as direct_error:
+            # If it might be a custom ID, try with custom_task_ids=true
+            if custom_type or "-" in parsed_id:
+                try:
+                    team_id = (self.client.config.default_team_id or
+                              self.client.config.default_workspace_id)
+                    return await self.client.get_task(
+                        parsed_id,
+                        include_subtasks=include_subtasks,
+                        custom_task_ids=True,
+                        team_id=team_id
+                    )
+                except ClickUpAPIError as custom_error:
+                    # If both fail, try search as final fallback
+                    try:
+                        tasks = await self.client.search_tasks(query=task_id)
+                        if not tasks:
+                            raise ClickUpAPIError(f"Task '{task_id}' not found")
+
+                        # Find exact match by custom_id or use first result
+                        for task in tasks:
+                            if hasattr(task, 'custom_id') and task.custom_id == task_id:
+                                return task
+                        return tasks[0]
+                    except ClickUpAPIError:
+                        # Re-raise the most relevant error
+                        raise (custom_error if custom_type else direct_error) from None
+            else:
+                # Not a custom ID pattern, re-raise the original error
+                raise direct_error
+
     async def create_task(
         self,
         title: str,
@@ -546,7 +603,7 @@ class ClickUpTools:
         # Create task
         task = await self.client.create_task(list_id, task_request)
 
-        return {
+        result = {
             "id": task.id,
             "name": task.name,
             "status": task.status.status,
@@ -555,23 +612,21 @@ class ClickUpTools:
             "created": True,
         }
 
+        if task.custom_id:
+            result["custom_id"] = task.custom_id
+
+        return result
+
     async def get_task(
         self,
         task_id: str,
         include_subtasks: bool = False,
     ) -> Dict[str, Any]:
         """Get task details."""
-        # Parse task ID
-        parsed_id, custom_type = parse_task_id(task_id, self.client.config.id_patterns)
-
-        # If it's a custom ID, search for it
-        if custom_type:
-            tasks = await self.client.search_tasks(query=parsed_id)
-            if not tasks:
-                return {"error": f"Task with ID '{task_id}' not found"}
-            task = tasks[0]
-        else:
-            task = await self.client.get_task(parsed_id, include_subtasks)
+        try:
+            task = await self._resolve_task_id(task_id, include_subtasks)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to get task '{task_id}': {e!s}"}
 
         result = {
             "id": task.id,
@@ -586,6 +641,9 @@ class ClickUpTools:
             "url": format_task_url(task.id),
             "tags": task.tags,
         }
+
+        if task.custom_id:
+            result["custom_id"] = task.custom_id
 
         if task.due_date:
             result["due_date"] = task.due_date.isoformat()
@@ -616,8 +674,12 @@ class ClickUpTools:
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """Update task properties."""
-        # Parse task ID
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
+        try:
+            # First resolve the task to get the internal ID
+            resolved_task = await self._resolve_task_id(task_id)
+            parsed_id = resolved_task.id
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to resolve task '{task_id}': {e!s}"}
 
         update_request = UpdateTaskRequest()
 
@@ -652,9 +714,13 @@ class ClickUpTools:
 
     async def delete_task(self, task_id: str) -> Dict[str, Any]:
         """Delete a task."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-        await self.client.delete_task(parsed_id)
-        return {"id": parsed_id, "deleted": True}
+        try:
+            # First resolve the task to get the internal ID
+            task = await self._resolve_task_id(task_id)
+            await self.client.delete_task(task.id)
+            return {"id": task.id, "deleted": True}
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to delete task '{task_id}': {e!s}"}
 
     async def list_tasks(
         self,
@@ -721,41 +787,41 @@ class ClickUpTools:
 
     async def get_subtasks(self, parent_task_id: str) -> Dict[str, Any]:
         """Get subtasks of a parent task."""
-        parsed_id, _ = parse_task_id(parent_task_id, self.client.config.id_patterns)
+        try:
+            # First resolve the task to get the internal ID
+            task = await self._resolve_task_id(parent_task_id)
+            # Use the client's proper subtasks method
+            subtasks = await self.client.get_subtasks(task.id)
 
-        # Get parent task to find its list
-        parent = await self.client.get_task(parsed_id)
-
-        # Get all tasks in the same list
-        tasks = await self.client.get_tasks(
-            list_id=parent.list["id"],
-            include_closed=True,
-        )
-
-        # Filter subtasks
-        subtasks = [task for task in tasks if task.parent == parsed_id]
-
-        return {
-            "parent_id": parsed_id,
-            "subtasks": [
-                {
-                    "id": task.id,
-                    "name": task.name,
-                    "status": task.status.status,
-                    "assignees": [u.username for u in task.assignees],
-                }
-                for task in subtasks
-            ],
-            "count": len(subtasks),
-        }
+            return {
+                "parent_id": task.id,
+                "subtasks": [
+                    {
+                        "id": task.id,
+                        "name": task.name,
+                        "status": task.status.status,
+                        "assignees": [u.username for u in task.assignees],
+                        "url": format_task_url(task.id),
+                        "custom_id": task.custom_id if task.custom_id else None,
+                    }
+                    for task in subtasks
+                ],
+                "count": len(subtasks),
+            }
+        except Exception as e:
+            return {"error": f"Failed to get subtasks for '{parent_task_id}': {e!s}"}
 
     async def get_task_comments(self, task_id: str) -> Dict[str, Any]:
         """Get task comments."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-        comments = await self.client.get_task_comments(parsed_id)
+        try:
+            # First resolve the task to get the internal ID
+            task = await self._resolve_task_id(task_id)
+            comments = await self.client.get_task_comments(task.id)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to get comments for task '{task_id}': {e!s}"}
 
         return {
-            "task_id": parsed_id,
+            "task_id": task.id,
             "comments": [
                 {
                     "id": comment["id"],
@@ -768,10 +834,37 @@ class ClickUpTools:
             "count": len(comments),
         }
 
+    async def create_task_comment(
+        self,
+        task_id: str,
+        comment_text: str,
+        assignee: Optional[int] = None,
+        notify_all: bool = True,
+    ) -> Dict[str, Any]:
+        """Create a comment on a task."""
+        try:
+            # First resolve the task to get the internal ID
+            task = await self._resolve_task_id(task_id)
+            comment_data = await self.client.create_task_comment(
+                task.id, comment_text, assignee, notify_all
+            )
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to create comment on task '{task_id}': {e!s}"}
+
+        return {
+            "task_id": task.id,
+            "comment_id": comment_data.get("id"),
+            "comment_text": comment_text,
+            "created": True,
+            "notify_all": notify_all,
+        }
+
     async def get_task_status(self, task_id: str) -> Dict[str, Any]:
         """Get task status."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-        task = await self.client.get_task(parsed_id)
+        try:
+            task = await self._resolve_task_id(task_id)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to get task status for '{task_id}': {e!s}"}
 
         return {
             "task_id": task.id,
@@ -782,10 +875,13 @@ class ClickUpTools:
 
     async def update_task_status(self, task_id: str, status: str) -> Dict[str, Any]:
         """Update task status."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-
-        update_request = UpdateTaskRequest(status=status)
-        task = await self.client.update_task(parsed_id, update_request)
+        try:
+            # First resolve the task to get the internal ID
+            resolved_task = await self._resolve_task_id(task_id)
+            update_request = UpdateTaskRequest(status=status)
+            task = await self.client.update_task(resolved_task.id, update_request)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to update task status for '{task_id}': {e!s}"}
 
         return {
             "task_id": task.id,
@@ -795,8 +891,10 @@ class ClickUpTools:
 
     async def get_assignees(self, task_id: str) -> Dict[str, Any]:
         """Get task assignees."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-        task = await self.client.get_task(parsed_id)
+        try:
+            task = await self._resolve_task_id(task_id)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to get assignees for task '{task_id}': {e!s}"}
 
         return {
             "task_id": task.id,
@@ -814,10 +912,13 @@ class ClickUpTools:
 
     async def assign_task(self, task_id: str, user_ids: List[int]) -> Dict[str, Any]:
         """Assign users to task."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-
-        update_request = UpdateTaskRequest(assignees={"add": user_ids})
-        task = await self.client.update_task(parsed_id, update_request)
+        try:
+            # First resolve the task to get the internal ID
+            resolved_task = await self._resolve_task_id(task_id)
+            update_request = UpdateTaskRequest(assignees={"add": user_ids})
+            task = await self.client.update_task(resolved_task.id, update_request)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to assign users to task '{task_id}': {e!s}"}
 
         return {
             "task_id": task.id,
@@ -853,6 +954,14 @@ class ClickUpTools:
                     "id": folder.id,
                     "name": folder.name,
                     "task_count": folder.task_count,
+                    "lists": [
+                        {
+                            "id": lst.id,
+                            "name": lst.name,
+                            "task_count": lst.task_count,
+                        }
+                        for lst in folder.lists
+                    ],
                 }
                 for folder in folders
             ],
@@ -926,8 +1035,9 @@ class ClickUpTools:
 
         for task_id in task_ids:
             try:
-                parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-                await self.client.update_task(parsed_id, update_request)
+                # Resolve each task ID to get the internal ID
+                resolved_task = await self._resolve_task_id(task_id)
+                await self.client.update_task(resolved_task.id, update_request)
                 results["updated"].append(task_id)
             except Exception as e:
                 results["failed"].append({"task_id": task_id, "error": str(e)})
@@ -940,10 +1050,11 @@ class ClickUpTools:
 
         for task_id in task_ids:
             try:
-                parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
+                # Resolve each task ID to get the internal ID
+                resolved_task = await self._resolve_task_id(task_id)
                 # Moving tasks requires updating the list property
                 await self.client._request(
-                    "PUT", f"/task/{parsed_id}", json={"list": target_list_id}
+                    "PUT", f"/task/{resolved_task.id}", json={"list": target_list_id}
                 )
                 results["moved"].append(task_id)
             except Exception as e:
@@ -1006,13 +1117,17 @@ class ClickUpTools:
         description: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Log time spent on a task."""
-        parsed_id, _ = parse_task_id(task_id, self.client.config.id_patterns)
-        duration_ms = parse_duration(duration)
+        try:
+            # First resolve the task to get the internal ID
+            resolved_task = await self._resolve_task_id(task_id)
+            duration_ms = parse_duration(duration)
+        except ClickUpAPIError as e:
+            return {"error": f"Failed to resolve task '{task_id}': {e!s}"}
 
         # Create time entry
         payload = {
             "duration": duration_ms,
-            "task_id": parsed_id,
+            "task_id": resolved_task.id,
         }
         if description:
             payload["description"] = description
@@ -1028,7 +1143,7 @@ class ClickUpTools:
             "logged": True,
             "duration": duration,
             "duration_ms": duration_ms,
-            "task_id": parsed_id,
+            "task_id": resolved_task.id,
         }
 
     # Templates and chains

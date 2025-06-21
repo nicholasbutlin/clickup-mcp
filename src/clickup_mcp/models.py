@@ -142,15 +142,19 @@ class List(BaseModel):
     id: str
     name: str
     orderindex: int
+    content: Optional[str] = None  # Added missing field
     status: Optional[Dict[str, Any]] = None
     priority: Optional[Dict[str, Any]] = None
     assignee: Optional[Dict[str, Any]] = None
-    task_count: Optional[int] = None
-    due_date: Optional[Dict[str, Any]] = None
-    start_date: Optional[Dict[str, Any]] = None
+    task_count: Optional[Union[str, int]] = None
+    due_date: Optional[str] = None  # API returns string timestamp
+    start_date: Optional[str] = None  # API returns string timestamp
     folder: Optional[Dict[str, Any]] = None
     space: Dict[str, Any]
     archived: bool = False
+    override_statuses: Optional[bool] = False  # Added missing field
+    statuses: ListType[Dict[str, Any]] = []  # Added missing field
+    permission_level: Optional[str] = None  # Added missing field
 
 
 class Folder(BaseModel):
@@ -162,9 +166,11 @@ class Folder(BaseModel):
     override_statuses: bool = False
     hidden: bool = False
     space: Dict[str, Any]
-    task_count: Optional[int] = None
+    task_count: Optional[Union[str, int]] = None  # API returns string, not int
     lists: ListType["List"] = []
     archived: bool = False
+    statuses: ListType[Dict[str, Any]] = []  # Added missing field
+    permission_level: Optional[str] = None  # Added missing field
 
 
 class Space(BaseModel):

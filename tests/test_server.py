@@ -49,7 +49,7 @@ class TestClickUpMCPServer:
         """Test server startup process."""
         # Mock the API connection
         server.client.get_current_user = AsyncMock(return_value={"username": "testuser"})
-        
+
         with patch("clickup_mcp.server.stdio_server") as mock_stdio:
             # Mock stdio_server to return read/write streams
             mock_read_stream = AsyncMock()

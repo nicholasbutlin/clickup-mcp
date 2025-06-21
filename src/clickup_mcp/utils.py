@@ -25,27 +25,38 @@ def parse_task_id(
         - "https://app.clickup.com/t/abc123" -> ("abc123", None)
     """
     task_ref = task_ref.strip()
+    extracted_id = task_ref
 
-    # Handle ClickUp URLs
+    # Handle ClickUp URLs - extract the task ID first
     if task_ref.startswith(("http://", "https://")):
         parsed = urlparse(task_ref)
-        # Extract task ID from path like /t/abc123
-        match = re.search(r"/t/([a-zA-Z0-9]+)", parsed.path)
-        if match:
-            return match.group(1), None
+        # Extract task ID from path like /t/3647378/GH-3761 or /t/abc123def
+        # The format is /t/teamid/taskid - the actual task ID is the last segment
+        path_parts = [part for part in parsed.path.split('/') if part]
+        if len(path_parts) >= 3 and path_parts[0] == 't':
+            # If we have /t/teamid/taskid format, return the last part (taskid)
+            extracted_id = path_parts[-1]
+        elif len(path_parts) >= 2 and path_parts[0] == 't':
+            # If we have /t/taskid format, return the task ID
+            extracted_id = path_parts[1]
+        else:
+            # Fallback to original regex for simple /t/taskid format
+            match = re.search(r"/t/([a-zA-Z0-9-]+)", parsed.path)
+            if match:
+                extracted_id = match.group(1)
 
     # Handle #123 format
-    if task_ref.startswith("#"):
-        return task_ref[1:], None
+    elif task_ref.startswith("#"):
+        extracted_id = task_ref[1:]
 
-    # Handle custom ID patterns (e.g., gh-123, cs-456)
-    if id_patterns and "-" in task_ref:
-        prefix = task_ref.split("-")[0]
+    # Now check if the extracted ID matches custom patterns
+    if id_patterns and "-" in extracted_id:
+        prefix = extracted_id.split("-")[0].lower()
         if prefix in id_patterns:
-            return task_ref, prefix
+            return extracted_id, prefix
 
     # Default: assume it's a direct task ID
-    return task_ref, None
+    return extracted_id, None
 
 
 def format_task_url(task_id: str) -> str:

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from clickup_mcp.client import ClickUpAPIError, ClickUpClient
-from httpx import HTTPStatusError, Request, Response
+from httpx import Response
 
 
 class TestClickUpClient:
@@ -39,7 +39,7 @@ class TestClickUpClient:
     async def test_create_task(self, mock_client, mock_response, sample_task):
         """Test creating a task."""
         from clickup_mcp.models import CreateTaskRequest, Task
-        
+
         mock_response_obj = mock_response(200, sample_task)
         mock_client.client.request = AsyncMock(return_value=mock_response_obj)
 
@@ -47,7 +47,7 @@ class TestClickUpClient:
             name="Test Task",
             description="Test description",
         )
-        
+
         result = await mock_client.create_task(
             list_id="list123",
             task=task_request,
@@ -62,7 +62,7 @@ class TestClickUpClient:
     async def test_get_task(self, mock_client, mock_response, sample_task):
         """Test getting a task."""
         from clickup_mcp.models import Task
-        
+
         mock_response_obj = mock_response(200, sample_task)
         mock_client.client.request = AsyncMock(return_value=mock_response_obj)
 
@@ -76,8 +76,8 @@ class TestClickUpClient:
     @pytest.mark.asyncio
     async def test_update_task(self, mock_client, mock_response, sample_task):
         """Test updating a task."""
-        from clickup_mcp.models import UpdateTaskRequest, Task
-        
+        from clickup_mcp.models import Task, UpdateTaskRequest
+
         updated_task = {**sample_task, "name": "Updated Task"}
         mock_client.client.request = AsyncMock(
             return_value=mock_response(200, updated_task)
@@ -106,7 +106,7 @@ class TestClickUpClient:
     async def test_get_tasks(self, mock_client, mock_response, sample_task):
         """Test getting tasks."""
         from clickup_mcp.models import Task
-        
+
         tasks_response = {"tasks": [sample_task]}
         mock_client.client.request = AsyncMock(
             return_value=mock_response(200, tasks_response)
@@ -124,7 +124,7 @@ class TestClickUpClient:
     async def test_search_tasks(self, mock_client, mock_response, sample_task):
         """Test searching tasks."""
         from clickup_mcp.models import Task
-        
+
         search_response = {"tasks": [sample_task]}
         mock_client.client.request = AsyncMock(
             return_value=mock_response(200, search_response)
@@ -207,7 +207,7 @@ class TestClickUpClient:
         # Mock groups endpoint failure
         error_response = mock_response(403, {"err": "Access denied"})
         error_response.status_code = 403
-        
+
         # Mock team endpoint success
         team_data = {
             "team": {
@@ -218,7 +218,7 @@ class TestClickUpClient:
                 ]
             }
         }
-        
+
         mock_client.client.request = AsyncMock(
             side_effect=[error_response, mock_response(200, team_data)]
         )
@@ -236,7 +236,7 @@ class TestClickUpClient:
         error_response = mock_response(404, {})
         error_response.text = "Task not found"
         error_response.json.side_effect = Exception("No JSON")  # Simulate JSON parse error
-        
+
         mock_client.client.request = AsyncMock(return_value=error_response)
 
         with pytest.raises(ClickUpAPIError) as exc_info:
