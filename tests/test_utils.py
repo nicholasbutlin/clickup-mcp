@@ -39,7 +39,10 @@ class TestUtils:
         assert parse_task_id("https://app.clickup.com/t/3647378/868efatce") == ("868efatce", None)
         # Test that custom IDs from URLs are recognized when patterns provided
         id_patterns = {"gh": "GitHub Issue"}
-        assert parse_task_id("https://app.clickup.com/t/3647378/GH-3761", id_patterns) == ("GH-3761", "gh")
+        assert parse_task_id("https://app.clickup.com/t/3647378/GH-3761", id_patterns) == (
+            "GH-3761",
+            "gh",
+        )
 
     def test_parse_task_id_hash_format(self):
         """Test parsing hash format task IDs."""

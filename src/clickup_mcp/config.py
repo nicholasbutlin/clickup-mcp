@@ -32,7 +32,7 @@ class ConfigModel(BaseModel):
     cache_ttl: int = Field(default=300, description="Cache TTL in seconds")
     id_patterns: Dict[str, str] = Field(
         default_factory=lambda: {"gh": "GitHub Issues", "GH": "GitHub Issues"},
-        description="Custom ID patterns like {'gh': 'GitHub Issues'}"
+        description="Custom ID patterns like {'gh': 'GitHub Issues'}",
     )
 
     @field_validator("api_key")

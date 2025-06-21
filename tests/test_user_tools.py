@@ -18,8 +18,20 @@ class TestUserTools:
     async def test_list_users(self, tools):
         """Test list_users tool."""
         members_data = [
-            {"id": 1, "username": "user1", "email": "user1@example.com", "color": "#FF0000", "initials": "U1"},
-            {"id": 2, "username": "user2", "email": "user2@example.com", "color": "#00FF00", "initials": "U2"},
+            {
+                "id": 1,
+                "username": "user1",
+                "email": "user1@example.com",
+                "color": "#FF0000",
+                "initials": "U1",
+            },
+            {
+                "id": 2,
+                "username": "user2",
+                "email": "user2@example.com",
+                "color": "#00FF00",
+                "initials": "U2",
+            },
         ]
         tools.client.get_workspace_members = AsyncMock(return_value=members_data)
 
@@ -65,14 +77,14 @@ class TestUserTools:
         # Test finding by partial username
         result = await tools.find_user_by_name("john")
 
-        assert result["found"] == True
+        assert result["found"] is True
         assert result["count"] == 1
         assert result["matches"][0]["username"] == "john.doe"
 
         # Test finding by email
         result = await tools.find_user_by_name("jane@")
 
-        assert result["found"] == True
+        assert result["found"] is True
         assert result["count"] == 1
         assert result["matches"][0]["email"] == "jane@example.com"
 

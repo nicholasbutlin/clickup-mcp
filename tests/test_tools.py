@@ -34,7 +34,7 @@ class TestClickUpTools:
         assert result["id"] == "abc123"
         assert result["name"] == "Test Task"
         assert result["url"] == "https://app.clickup.com/t/abc123"
-        assert result["created"] == True
+        assert result["created"] is True
         tools.client.create_task.assert_called_once()
 
     @pytest.mark.asyncio
@@ -58,7 +58,7 @@ class TestClickUpTools:
         # Check the expected tools.create_task return format
         assert result["id"] == "abc123"
         assert result["name"] == "Test Task"
-        assert result["created"] == True
+        assert result["created"] is True
         tools.client.find_list_by_name.assert_called_once_with("Test List")
         tools.client.create_task.assert_called_once()
 
@@ -90,7 +90,7 @@ class TestClickUpTools:
         task_obj = Task(**sample_task)
         updated_task_data = {**sample_task, "name": "Updated Task"}
         updated_task_obj = Task(**updated_task_data)
-        
+
         tools._resolve_task_id = AsyncMock(return_value=task_obj)
         tools.client.update_task = AsyncMock(return_value=updated_task_obj)
 
@@ -152,8 +152,44 @@ class TestClickUpTools:
         from clickup_mcp.models import Task
 
         # Mock client.update_task to return Task objects
-        task1_data = {"id": "task1", "name": "Task 1", "status": {"id": "status1", "status": "done", "color": "#ffffff", "orderindex": 0, "type": "closed"}, "creator": {"id": 123, "username": "testuser"}, "list": {"id": "list123", "name": "Test List"}, "folder": {"id": "folder123", "name": "Test Folder"}, "space": {"id": "space123", "name": "Test Space"}, "url": "https://app.clickup.com/t/task1", "assignees": [], "tags": [], "custom_fields": []}
-        task2_data = {"id": "task2", "name": "Task 2", "status": {"id": "status1", "status": "done", "color": "#ffffff", "orderindex": 0, "type": "closed"}, "creator": {"id": 123, "username": "testuser"}, "list": {"id": "list123", "name": "Test List"}, "folder": {"id": "folder123", "name": "Test Folder"}, "space": {"id": "space123", "name": "Test Space"}, "url": "https://app.clickup.com/t/task2", "assignees": [], "tags": [], "custom_fields": []}
+        task1_data = {
+            "id": "task1",
+            "name": "Task 1",
+            "status": {
+                "id": "status1",
+                "status": "done",
+                "color": "#ffffff",
+                "orderindex": 0,
+                "type": "closed",
+            },
+            "creator": {"id": 123, "username": "testuser"},
+            "list": {"id": "list123", "name": "Test List"},
+            "folder": {"id": "folder123", "name": "Test Folder"},
+            "space": {"id": "space123", "name": "Test Space"},
+            "url": "https://app.clickup.com/t/task1",
+            "assignees": [],
+            "tags": [],
+            "custom_fields": [],
+        }
+        task2_data = {
+            "id": "task2",
+            "name": "Task 2",
+            "status": {
+                "id": "status1",
+                "status": "done",
+                "color": "#ffffff",
+                "orderindex": 0,
+                "type": "closed",
+            },
+            "creator": {"id": 123, "username": "testuser"},
+            "list": {"id": "list123", "name": "Test List"},
+            "folder": {"id": "folder123", "name": "Test Folder"},
+            "space": {"id": "space123", "name": "Test Space"},
+            "url": "https://app.clickup.com/t/task2",
+            "assignees": [],
+            "tags": [],
+            "custom_fields": [],
+        }
 
         task1_obj = Task(**task1_data)
         task2_obj = Task(**task2_data)
@@ -182,7 +218,7 @@ class TestClickUpTools:
         result = await tools.create_task_from_template(
             template_name="bug_report",
             list_id="list123",
-            customizations={"title": "Login button not working"}
+            customizations={"title": "Login button not working"},
         )
 
         # Check tools.create_task_from_template return format
@@ -222,7 +258,7 @@ class TestClickUpTools:
 
         assert result["created"] == 3
         assert len(result["tasks"]) == 3
-        assert result["linked"] == True
+        assert result["linked"] is True
         assert result["tasks"][0]["id"] == "task1"
         assert result["tasks"][1]["id"] == "task2"
         assert result["tasks"][2]["id"] == "task3"
@@ -259,22 +295,35 @@ class TestClickUpTools:
         return {
             "name": "Test Task",
             "description": "Test description",
-            "status": {"id": "status123", "status": "todo", "color": "#ffffff", "orderindex": 0, "type": "open"},
-            "creator": {"id": 123, "username": "testuser", "email": "test@example.com", "color": "#000000", "initials": "TU", "profile_picture": None},
+            "status": {
+                "id": "status123",
+                "status": "todo",
+                "color": "#ffffff",
+                "orderindex": 0,
+                "type": "open",
+            },
+            "creator": {
+                "id": 123,
+                "username": "testuser",
+                "email": "test@example.com",
+                "color": "#000000",
+                "initials": "TU",
+                "profile_picture": None,
+            },
             "list": {"id": "list123", "name": "Test List"},
             "folder": {"id": "folder123", "name": "Test Folder"},
             "space": {"id": "space123", "name": "Test Space"},
             "url": "https://app.clickup.com/t/abc123",
             "assignees": [],
             "tags": [],
-            "custom_fields": []
+            "custom_fields": [],
         }
 
     @pytest.mark.asyncio
     async def test_log_time(self, tools, sample_task):
         """Test logging time on a task."""
         from clickup_mcp.models import Task
-        
+
         # Mock task resolution
         task_obj = Task(**sample_task)
         tools._resolve_task_id = AsyncMock(return_value=task_obj)
@@ -287,18 +336,14 @@ class TestClickUpTools:
             description="Working on feature",
         )
 
-        assert result["logged"] == True
+        assert result["logged"] is True
         assert result["task_id"] == "abc123"
         assert result["duration_ms"] == 9000000  # 2.5 hours in ms
         assert result["duration"] == "2h 30m"
         tools.client._request.assert_called_once_with(
             "POST",
             "/team/test_workspace/time_entries",
-            json={
-                "duration": 9000000,
-                "task_id": "abc123",
-                "description": "Working on feature"
-            }
+            json={"duration": 9000000, "task_id": "abc123", "description": "Working on feature"},
         )
 
     @pytest.mark.asyncio
@@ -307,8 +352,26 @@ class TestClickUpTools:
         from clickup_mcp.models import Task
 
         # Mock completed and in-progress tasks
-        completed_task_data = {**sample_task, "status": {"id": "status1", "status": "done", "color": "#ffffff", "orderindex": 0, "type": "closed"}}
-        in_progress_task_data = {**sample_task, "status": {"id": "status2", "status": "in_progress", "color": "#ffffff", "orderindex": 0, "type": "custom"}}
+        completed_task_data = {
+            **sample_task,
+            "status": {
+                "id": "status1",
+                "status": "done",
+                "color": "#ffffff",
+                "orderindex": 0,
+                "type": "closed",
+            },
+        }
+        in_progress_task_data = {
+            **sample_task,
+            "status": {
+                "id": "status2",
+                "status": "in_progress",
+                "color": "#ffffff",
+                "orderindex": 0,
+                "type": "custom",
+            },
+        }
 
         # Create Task objects from the data
         completed_task = Task(**completed_task_data)
@@ -332,9 +395,7 @@ class TestClickUpTools:
     @pytest.mark.asyncio
     async def test_error_handling(self, tools):
         """Test error handling in tools."""
-        tools._resolve_task_id = AsyncMock(
-            side_effect=ClickUpAPIError("Task not found", 404)
-        )
+        tools._resolve_task_id = AsyncMock(side_effect=ClickUpAPIError("Task not found", 404))
 
         result = await tools.get_task("nonexistent")
 
@@ -349,26 +410,23 @@ class TestClickUpTools:
         # Mock task resolution and comment creation
         task_obj = Task(**sample_task)
         tools._resolve_task_id = AsyncMock(return_value=task_obj)
-        
+
         comment_response = {
             "id": "comment123",
             "comment_text": "test comment 2",
             "user": {"username": "testuser"},
-            "date": "1640995200000"
+            "date": "1640995200000",
         }
         tools.client.create_task_comment = AsyncMock(return_value=comment_response)
 
-        result = await tools.create_task_comment(
-            task_id="abc123",
-            comment_text="test comment 2"
-        )
+        result = await tools.create_task_comment(task_id="abc123", comment_text="test comment 2")
 
         # Check the expected return format
         assert result["task_id"] == "abc123"
         assert result["comment_id"] == "comment123"
         assert result["comment_text"] == "test comment 2"
-        assert result["created"] == True
-        assert result["notify_all"] == True
+        assert result["created"] is True
+        assert result["notify_all"] is True
         tools.client.create_task_comment.assert_called_once_with(
             "abc123", "test comment 2", None, True
         )
@@ -381,28 +439,25 @@ class TestClickUpTools:
         # Mock task resolution and comment creation
         task_obj = Task(**sample_task)
         tools._resolve_task_id = AsyncMock(return_value=task_obj)
-        
+
         comment_response = {
             "id": "comment456",
             "comment_text": "assigned comment",
             "user": {"username": "testuser"},
-            "date": "1640995200000"
+            "date": "1640995200000",
         }
         tools.client.create_task_comment = AsyncMock(return_value=comment_response)
 
         result = await tools.create_task_comment(
-            task_id="abc123",
-            comment_text="assigned comment",
-            assignee=12345,
-            notify_all=False
+            task_id="abc123", comment_text="assigned comment", assignee=12345, notify_all=False
         )
 
         # Check the expected return format
         assert result["task_id"] == "abc123"
         assert result["comment_id"] == "comment456"
         assert result["comment_text"] == "assigned comment"
-        assert result["created"] == True
-        assert result["notify_all"] == False
+        assert result["created"] is True
+        assert result["notify_all"] is False
         tools.client.create_task_comment.assert_called_once_with(
             "abc123", "assigned comment", 12345, False
         )
@@ -411,14 +466,9 @@ class TestClickUpTools:
     async def test_create_task_comment_error(self, tools):
         """Test create_task_comment error handling."""
         # Mock task resolution failure
-        tools._resolve_task_id = AsyncMock(
-            side_effect=ClickUpAPIError("Task not found")
-        )
+        tools._resolve_task_id = AsyncMock(side_effect=ClickUpAPIError("Task not found"))
 
-        result = await tools.create_task_comment(
-            task_id="invalid",
-            comment_text="test comment"
-        )
+        result = await tools.create_task_comment(task_id="invalid", comment_text="test comment")
 
         # Should handle error gracefully
         assert "error" in result

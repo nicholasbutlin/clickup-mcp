@@ -26,6 +26,7 @@ def mock_config():
 @pytest.fixture
 def mock_response():
     """Factory for creating mock HTTP responses."""
+
     def _make_response(
         status_code: int = 200,
         json_data: Dict[str, Any] | None = None,

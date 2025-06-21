@@ -1,5 +1,10 @@
 # ClickUp MCP Server
 
+[![CI](https://github.com/DiversioTeam/clickup-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/DiversioTeam/clickup-mcp/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/DiversioTeam/clickup-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/DiversioTeam/clickup-mcp)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A Model Context Protocol (MCP) server that enables AI assistants to interact with ClickUp's task management API. This server provides core task management capabilities through natural language, focusing on essential project workflows rather than ClickUp's full feature set.
 
 Built by the [Diversio](https://diversio.com) team for streamlined AI-powered task management.

@@ -224,8 +224,14 @@ class ClickUpTools:
                     "properties": {
                         "task_id": {"type": "string", "description": "Task ID"},
                         "comment_text": {"type": "string", "description": "Comment text"},
-                        "assignee": {"type": "integer", "description": "User ID to assign (optional)"},
-                        "notify_all": {"type": "boolean", "description": "Notify all assignees (default: true)"},
+                        "assignee": {
+                            "type": "integer",
+                            "description": "User ID to assign (optional)",
+                        },
+                        "notify_all": {
+                            "type": "boolean",
+                            "description": "Notify all assignees (default: true)",
+                        },
                     },
                     "required": ["task_id", "comment_text"],
                 },
@@ -525,21 +531,20 @@ class ClickUpTools:
 
         # Try direct lookup first (works for both internal and custom IDs)
         try:
-            return await self.client.get_task(
-                parsed_id,
-                include_subtasks=include_subtasks
-            )
+            return await self.client.get_task(parsed_id, include_subtasks=include_subtasks)
         except ClickUpAPIError as direct_error:
             # If it might be a custom ID, try with custom_task_ids=true
             if custom_type or "-" in parsed_id:
                 try:
-                    team_id = (self.client.config.default_team_id or
-                              self.client.config.default_workspace_id)
+                    team_id = (
+                        self.client.config.default_team_id
+                        or self.client.config.default_workspace_id
+                    )
                     return await self.client.get_task(
                         parsed_id,
                         include_subtasks=include_subtasks,
                         custom_task_ids=True,
-                        team_id=team_id
+                        team_id=team_id,
                     )
                 except ClickUpAPIError as custom_error:
                     # If both fail, try search as final fallback
@@ -550,7 +555,7 @@ class ClickUpTools:
 
                         # Find exact match by custom_id or use first result
                         for task in tasks:
-                            if hasattr(task, 'custom_id') and task.custom_id == task_id:
+                            if hasattr(task, "custom_id") and task.custom_id == task_id:
                                 return task
                         return tasks[0]
                     except ClickUpAPIError:
@@ -1377,7 +1382,9 @@ class ClickUpTools:
             "role": user.get("role"),
         }
 
-    async def find_user_by_name(self, name: str, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+    async def find_user_by_name(
+        self, name: str, workspace_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Find a user by name or email."""
         members = await self.client.get_workspace_members(workspace_id)
 
@@ -1390,14 +1397,16 @@ class ClickUpTools:
             email = member.get("email", "").lower()
 
             if name_lower in username or name_lower in email:
-                matches.append({
-                    "id": member.get("id"),
-                    "username": member.get("username"),
-                    "email": member.get("email"),
-                    "initials": member.get("initials"),
-                    "color": member.get("color"),
-                    "profilePicture": member.get("profilePicture"),
-                })
+                matches.append(
+                    {
+                        "id": member.get("id"),
+                        "username": member.get("username"),
+                        "email": member.get("email"),
+                        "initials": member.get("initials"),
+                        "color": member.get("color"),
+                        "profilePicture": member.get("profilePicture"),
+                    }
+                )
 
         if not matches:
             return {"error": f"No user found matching '{name}'", "matches": []}

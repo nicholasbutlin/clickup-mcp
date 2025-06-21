@@ -81,7 +81,9 @@ class ClickUpClient:
         data = await self._request("GET", "/user")
         return data.get("user", {})
 
-    async def get_workspace_members(self, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_workspace_members(
+        self, workspace_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Get all members of a workspace.
 
         Note: This endpoint requires the workspace to be on an Enterprise plan
@@ -112,7 +114,7 @@ class ClickUpClient:
                             "email": member.get("email"),
                             "initials": member.get("initials"),
                             "color": member.get("color"),
-                            "profilePicture": member.get("profilePicture")
+                            "profilePicture": member.get("profilePicture"),
                         }
                         members_dict[user_id] = user_data
 
@@ -144,7 +146,7 @@ class ClickUpClient:
                         "email": user_data.get("email"),
                         "initials": user_data.get("initials"),
                         "color": user_data.get("color"),
-                        "profilePicture": user_data.get("profilePicture")
+                        "profilePicture": user_data.get("profilePicture"),
                     }
                     formatted_members.append(formatted_member)
 
@@ -157,14 +159,16 @@ class ClickUpClient:
         # Final fallback: get current user and return as single-item list
         try:
             current_user = await self.get_current_user()
-            return [{
-                "id": current_user.get("id"),
-                "username": current_user.get("username"),
-                "email": current_user.get("email"),
-                "initials": current_user.get("initials"),
-                "color": current_user.get("color"),
-                "profilePicture": current_user.get("profilePicture")
-            }]
+            return [
+                {
+                    "id": current_user.get("id"),
+                    "username": current_user.get("username"),
+                    "email": current_user.get("email"),
+                    "initials": current_user.get("initials"),
+                    "color": current_user.get("color"),
+                    "profilePicture": current_user.get("profilePicture"),
+                }
+            ]
         except ClickUpAPIError:
             logger.warning("Unable to fetch any workspace members")
             return []

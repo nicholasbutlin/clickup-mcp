@@ -79,9 +79,7 @@ class TestClickUpClient:
         from clickup_mcp.models import Task, UpdateTaskRequest
 
         updated_task = {**sample_task, "name": "Updated Task"}
-        mock_client.client.request = AsyncMock(
-            return_value=mock_response(200, updated_task)
-        )
+        mock_client.client.request = AsyncMock(return_value=mock_response(200, updated_task))
 
         update_request = UpdateTaskRequest(name="Updated Task")
         result = await mock_client.update_task("abc123", update_request)
@@ -93,9 +91,7 @@ class TestClickUpClient:
     @pytest.mark.asyncio
     async def test_delete_task(self, mock_client, mock_response):
         """Test deleting a task."""
-        mock_client.client.request = AsyncMock(
-            return_value=mock_response(204, {})
-        )
+        mock_client.client.request = AsyncMock(return_value=mock_response(204, {}))
 
         result = await mock_client.delete_task("abc123")
 
@@ -108,9 +104,7 @@ class TestClickUpClient:
         from clickup_mcp.models import Task
 
         tasks_response = {"tasks": [sample_task]}
-        mock_client.client.request = AsyncMock(
-            return_value=mock_response(200, tasks_response)
-        )
+        mock_client.client.request = AsyncMock(return_value=mock_response(200, tasks_response))
 
         result = await mock_client.get_tasks(list_id="list123")
 
@@ -126,9 +120,7 @@ class TestClickUpClient:
         from clickup_mcp.models import Task
 
         search_response = {"tasks": [sample_task]}
-        mock_client.client.request = AsyncMock(
-            return_value=mock_response(200, search_response)
-        )
+        mock_client.client.request = AsyncMock(return_value=mock_response(200, search_response))
 
         result = await mock_client.search_tasks(
             workspace_id="workspace123",
@@ -154,9 +146,7 @@ class TestClickUpClient:
                 "initials": "TU",
             }
         }
-        mock_client.client.request = AsyncMock(
-            return_value=mock_response(200, user_data)
-        )
+        mock_client.client.request = AsyncMock(return_value=mock_response(200, user_data))
 
         result = await mock_client.get_current_user()
 
@@ -177,7 +167,7 @@ class TestClickUpClient:
                     "members": [
                         {"id": 1, "username": "user1", "email": "user1@example.com"},
                         {"id": 2, "username": "user2", "email": "user2@example.com"},
-                    ]
+                    ],
                 },
                 {
                     "id": "group2",
@@ -185,13 +175,11 @@ class TestClickUpClient:
                     "members": [
                         {"id": 2, "username": "user2", "email": "user2@example.com"},  # Duplicate
                         {"id": 3, "username": "user3", "email": "user3@example.com"},
-                    ]
-                }
+                    ],
+                },
             ]
         }
-        mock_client.client.request = AsyncMock(
-            return_value=mock_response(200, groups_data)
-        )
+        mock_client.client.request = AsyncMock(return_value=mock_response(200, groups_data))
 
         result = await mock_client.get_workspace_members("workspace123")
 
@@ -215,7 +203,7 @@ class TestClickUpClient:
                 "members": [
                     {"id": 1, "username": "user1", "email": "user1@example.com"},
                     {"id": 2, "username": "user2", "email": "user2@example.com"},
-                ]
+                ],
             }
         }
 

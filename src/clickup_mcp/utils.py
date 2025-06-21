@@ -32,11 +32,11 @@ def parse_task_id(
         parsed = urlparse(task_ref)
         # Extract task ID from path like /t/3647378/GH-3761 or /t/abc123def
         # The format is /t/teamid/taskid - the actual task ID is the last segment
-        path_parts = [part for part in parsed.path.split('/') if part]
-        if len(path_parts) >= 3 and path_parts[0] == 't':
+        path_parts = [part for part in parsed.path.split("/") if part]
+        if len(path_parts) >= 3 and path_parts[0] == "t":
             # If we have /t/teamid/taskid format, return the last part (taskid)
             extracted_id = path_parts[-1]
-        elif len(path_parts) >= 2 and path_parts[0] == 't':
+        elif len(path_parts) >= 2 and path_parts[0] == "t":
             # If we have /t/taskid format, return the task ID
             extracted_id = path_parts[1]
         else:
