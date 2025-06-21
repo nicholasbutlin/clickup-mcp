@@ -76,7 +76,7 @@ class Config(BaseSettings):
         # Validate we have required fields
         if not self.api_key:
             raise ConfigError(
-                "No API key found. Please configure CLICKUP_MCP_API_KEY " "or create a config file."
+                "No API key found. Please configure CLICKUP_MCP_API_KEY or create a config file."
             )
 
     def _load_from_files(self) -> Dict[str, Any]:

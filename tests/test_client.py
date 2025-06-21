@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from clickup_mcp.client import ClickUpAPIError, ClickUpClient
 from httpx import Response
+
+from clickup_mcp.client import ClickUpAPIError, ClickUpClient
 
 
 class TestClickUpClient:

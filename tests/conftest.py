@@ -4,9 +4,10 @@ from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from httpx import AsyncClient, Response
+
 from clickup_mcp.client import ClickUpClient
 from clickup_mcp.config import Config
-from httpx import AsyncClient, Response
 
 
 @pytest.fixture
