@@ -1,0 +1,11 @@
+{
+  "api_key": "pk_1234567890_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  "default_workspace_id": "12345678",
+  "id_patterns": {
+    "gh": "GitHub Issues",
+    "cs": "Customer Support",
+    "bug": "Bug Reports",
+    "feat": "Feature Requests"
+  },
+  "cache_ttl": 300
+}
