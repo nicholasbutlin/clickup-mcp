@@ -105,23 +105,69 @@ class ClickUpClient:
                 for member in group.get("members", []):
                     user_id = member.get("id")
                     if user_id and user_id not in members_dict:
-                        members_dict[user_id] = member
+                        # Ensure consistent user format
+                        user_data = {
+                            "id": member.get("id"),
+                            "username": member.get("username"),
+                            "email": member.get("email"),
+                            "initials": member.get("initials"),
+                            "color": member.get("color"),
+                            "profilePicture": member.get("profilePicture")
+                        }
+                        members_dict[user_id] = user_data
 
-            return list(members_dict.values())
+            if members_dict:
+                return list(members_dict.values())
+
         except ClickUpAPIError:
-            # Fallback: Try to get members from tasks/lists if groups endpoint fails
-            # This is a workaround for non-Enterprise workspaces
-            logger.warning("Groups endpoint failed, falling back to workspace team endpoint")
+            logger.warning("Groups endpoint failed, trying other endpoints")
 
-            # Try the team endpoint which might have member information
-            try:
-                data = await self._request("GET", f"/team/{workspace_id}")
-                team = data.get("team", {})
-                members = team.get("members", [])
-                return members
-            except ClickUpAPIError:
-                logger.warning("Unable to fetch workspace members directly")
-                return []
+        # Try the team endpoint which might have member information
+        try:
+            data = await self._request("GET", f"/team/{workspace_id}")
+            team = data.get("team", {})
+            members = team.get("members", [])
+
+            # Format members consistently
+            formatted_members = []
+            for member in members:
+                if isinstance(member, dict):
+                    # Handle nested user structure
+                    if "user" in member:
+                        user_data = member["user"]
+                    else:
+                        user_data = member
+
+                    formatted_member = {
+                        "id": user_data.get("id"),
+                        "username": user_data.get("username"),
+                        "email": user_data.get("email"),
+                        "initials": user_data.get("initials"),
+                        "color": user_data.get("color"),
+                        "profilePicture": user_data.get("profilePicture")
+                    }
+                    formatted_members.append(formatted_member)
+
+            if formatted_members:
+                return formatted_members
+
+        except ClickUpAPIError:
+            logger.warning("Team endpoint also failed")
+
+        # Final fallback: get current user and return as single-item list
+        try:
+            current_user = await self.get_current_user()
+            return [{
+                "id": current_user.get("id"),
+                "username": current_user.get("username"),
+                "email": current_user.get("email"),
+                "initials": current_user.get("initials"),
+                "color": current_user.get("color"),
+                "profilePicture": current_user.get("profilePicture")
+            }]
+        except ClickUpAPIError:
+            logger.warning("Unable to fetch any workspace members")
+            return []
 
     # Workspace/Team endpoints
 
@@ -238,11 +284,17 @@ class ClickUpClient:
         self,
         task_id: str,
         include_subtasks: bool = False,
+        custom_task_ids: bool = False,
+        team_id: Optional[str] = None,
     ) -> Task:
         """Get a task by ID."""
         params = {}
         if include_subtasks:
             params["include_subtasks"] = "true"
+        if custom_task_ids:
+            params["custom_task_ids"] = "true"
+            if team_id:
+                params["team_id"] = team_id
 
         data = await self._request("GET", f"/task/{task_id}", params=params)
         return Task(**data)
@@ -378,3 +430,28 @@ class ClickUpClient:
             json=payload,
         )
         return data
+
+    async def get_subtasks(self, parent_task_id: str) -> List[Task]:
+        """Get subtasks of a parent task using team endpoint."""
+        # Get the workspace ID - use configured default or fetch from API
+        workspace_id = self.config.default_workspace_id
+        if not workspace_id:
+            workspaces = await self.get_workspaces()
+            if not workspaces:
+                return []
+            workspace_id = workspaces[0].id
+
+        # Use team endpoint to get tasks with parent filter
+        params = {
+            "parent": parent_task_id,
+            "include_closed": "true",
+        }
+
+        try:
+            data = await self._request("GET", f"/team/{workspace_id}/task", params=params)
+            tasks_data = data.get("tasks", [])
+            return [Task(**task_data) for task_data in tasks_data]
+        except ClickUpAPIError as e:
+            # If team endpoint fails, fallback to original method
+            logger.warning(f"Team endpoint failed for subtasks: {e}")
+            return []
