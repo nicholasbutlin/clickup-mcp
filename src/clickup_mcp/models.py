@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Dict, Optional, Union
 from typing import List as ListType
 
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, field_validator
 
 
 class TaskPriority(Enum):
@@ -148,7 +148,7 @@ class List(BaseModel):
     task_count: Optional[int] = None
     due_date: Optional[Dict[str, Any]] = None
     start_date: Optional[Dict[str, Any]] = None
-    folder: Dict[str, Any]
+    folder: Optional[Dict[str, Any]] = None
     space: Dict[str, Any]
     archived: bool = False
 

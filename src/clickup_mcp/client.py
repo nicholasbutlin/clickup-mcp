@@ -81,6 +81,48 @@ class ClickUpClient:
         data = await self._request("GET", "/user")
         return data.get("user", {})
 
+    async def get_workspace_members(self, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get all members of a workspace.
+
+        Note: This endpoint requires the workspace to be on an Enterprise plan
+        for full functionality. For non-Enterprise plans, it may return limited data.
+        """
+        workspace_id = workspace_id or self.config.default_workspace_id
+        if not workspace_id:
+            workspaces = await self.get_workspaces()
+            if not workspaces:
+                raise ClickUpAPIError("No workspaces found")
+            workspace_id = workspaces[0].id
+
+        # First try the groups endpoint which is more widely available
+        try:
+            data = await self._request("GET", "/group")
+            groups = data.get("groups", [])
+
+            # Extract unique members from all groups
+            members_dict = {}
+            for group in groups:
+                for member in group.get("members", []):
+                    user_id = member.get("id")
+                    if user_id and user_id not in members_dict:
+                        members_dict[user_id] = member
+
+            return list(members_dict.values())
+        except ClickUpAPIError:
+            # Fallback: Try to get members from tasks/lists if groups endpoint fails
+            # This is a workaround for non-Enterprise workspaces
+            logger.warning("Groups endpoint failed, falling back to workspace team endpoint")
+
+            # Try the team endpoint which might have member information
+            try:
+                data = await self._request("GET", f"/team/{workspace_id}")
+                team = data.get("team", {})
+                members = team.get("members", [])
+                return members
+            except ClickUpAPIError:
+                logger.warning("Unable to fetch workspace members directly")
+                return []
+
     # Workspace/Team endpoints
 
     async def get_workspaces(self) -> List[Workspace]:

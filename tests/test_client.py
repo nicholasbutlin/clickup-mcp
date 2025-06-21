@@ -143,6 +143,93 @@ class TestClickUpClient:
         mock_client.client.request.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_get_current_user(self, mock_client, mock_response):
+        """Test getting current user."""
+        user_data = {
+            "user": {
+                "id": 123,
+                "username": "testuser",
+                "email": "test@example.com",
+                "color": "#FF0000",
+                "initials": "TU",
+            }
+        }
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, user_data)
+        )
+
+        result = await mock_client.get_current_user()
+
+        assert result["id"] == 123
+        assert result["username"] == "testuser"
+        assert result["email"] == "test@example.com"
+        mock_client.client.request.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_workspace_members(self, mock_client, mock_response):
+        """Test getting workspace members."""
+        # Test successful groups endpoint response
+        groups_data = {
+            "groups": [
+                {
+                    "id": "group1",
+                    "name": "Group 1",
+                    "members": [
+                        {"id": 1, "username": "user1", "email": "user1@example.com"},
+                        {"id": 2, "username": "user2", "email": "user2@example.com"},
+                    ]
+                },
+                {
+                    "id": "group2",
+                    "name": "Group 2",
+                    "members": [
+                        {"id": 2, "username": "user2", "email": "user2@example.com"},  # Duplicate
+                        {"id": 3, "username": "user3", "email": "user3@example.com"},
+                    ]
+                }
+            ]
+        }
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, groups_data)
+        )
+
+        result = await mock_client.get_workspace_members("workspace123")
+
+        # Should return unique members
+        assert len(result) == 3
+        user_ids = [member["id"] for member in result]
+        assert user_ids == [1, 2, 3]
+        mock_client.client.request.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_workspace_members_fallback(self, mock_client, mock_response):
+        """Test workspace members fallback to team endpoint."""
+        # Mock groups endpoint failure
+        error_response = mock_response(403, {"err": "Access denied"})
+        error_response.status_code = 403
+        
+        # Mock team endpoint success
+        team_data = {
+            "team": {
+                "id": "workspace123",
+                "members": [
+                    {"id": 1, "username": "user1", "email": "user1@example.com"},
+                    {"id": 2, "username": "user2", "email": "user2@example.com"},
+                ]
+            }
+        }
+        
+        mock_client.client.request = AsyncMock(
+            side_effect=[error_response, mock_response(200, team_data)]
+        )
+
+        result = await mock_client.get_workspace_members("workspace123")
+
+        assert len(result) == 2
+        assert result[0]["username"] == "user1"
+        assert mock_client.client.request.call_count == 2
+
+    @pytest.mark.asyncio
     async def test_api_error_handling(self, mock_client, mock_response):
         """Test API error handling."""
         # Mock a 404 response - the client checks status_code and raises ClickUpAPIError

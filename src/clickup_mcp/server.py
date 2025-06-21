@@ -4,8 +4,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from mcp.server import Server
-from mcp.server.models import InitializationOptions
 from mcp.server.lowlevel import NotificationOptions
+from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import (
     EmbeddedResource,

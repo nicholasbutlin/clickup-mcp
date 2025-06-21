@@ -10,7 +10,7 @@ Built by the [Diversio](https://diversio.com) team for streamlined AI-powered ta
 - **Task CRUD Operations** - Create, read, update, and delete tasks
 - **Task Organization** - Navigate spaces, folders, and lists
 - **Task Search & Filtering** - Find tasks by various criteria
-- **Assignee Management** - Assign users and check assignments
+- **User & Assignment Management** - List users, find by name/email, assign to tasks
 - **Status Management** - Update and track task statuses
 
 ### ✅ Productivity Features

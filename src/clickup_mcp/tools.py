@@ -49,6 +49,10 @@ class ClickUpTools:
             # Analytics
             "get_team_workload": self.get_team_workload,
             "get_task_analytics": self.get_task_analytics,
+            # User management
+            "list_users": self.list_users,
+            "get_current_user": self.get_current_user,
+            "find_user_by_name": self.find_user_by_name,
         }
 
     def get_tool_definitions(self) -> List[Tool]:
@@ -438,6 +442,46 @@ class ClickUpTools:
                         },
                     },
                     "required": ["space_id"],
+                },
+            ),
+            # User management tools
+            Tool(
+                name="list_users",
+                description="List all users in the workspace",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "workspace_id": {
+                            "type": "string",
+                            "description": "Workspace ID (optional, uses default if not provided)",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="get_current_user",
+                description="Get details of the currently authenticated user",
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
+            Tool(
+                name="find_user_by_name",
+                description="Find a user by name or email",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name or email to search for",
+                        },
+                        "workspace_id": {
+                            "type": "string",
+                            "description": "Workspace ID (optional, uses default if not provided)",
+                        },
+                    },
+                    "required": ["name"],
                 },
             ),
         ]
@@ -1181,4 +1225,70 @@ class ClickUpTools:
                 "tasks_per_day": round(total_tasks / period_days, 2),
             },
             "by_priority": by_priority,
+        }
+
+    # User management
+
+    async def list_users(self, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+        """List all users in the workspace."""
+        members = await self.client.get_workspace_members(workspace_id)
+
+        return {
+            "users": [
+                {
+                    "id": member.get("id"),
+                    "username": member.get("username"),
+                    "email": member.get("email"),
+                    "initials": member.get("initials"),
+                    "color": member.get("color"),
+                    "profilePicture": member.get("profilePicture"),
+                }
+                for member in members
+            ],
+            "count": len(members),
+        }
+
+    async def get_current_user(self) -> Dict[str, Any]:
+        """Get details of the currently authenticated user."""
+        user = await self.client.get_current_user()
+
+        return {
+            "id": user.get("id"),
+            "username": user.get("username"),
+            "email": user.get("email"),
+            "initials": user.get("initials"),
+            "color": user.get("color"),
+            "profilePicture": user.get("profilePicture"),
+            "role": user.get("role"),
+        }
+
+    async def find_user_by_name(self, name: str, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+        """Find a user by name or email."""
+        members = await self.client.get_workspace_members(workspace_id)
+
+        # Search by username or email (case-insensitive)
+        name_lower = name.lower()
+        matches = []
+
+        for member in members:
+            username = member.get("username", "").lower()
+            email = member.get("email", "").lower()
+
+            if name_lower in username or name_lower in email:
+                matches.append({
+                    "id": member.get("id"),
+                    "username": member.get("username"),
+                    "email": member.get("email"),
+                    "initials": member.get("initials"),
+                    "color": member.get("color"),
+                    "profilePicture": member.get("profilePicture"),
+                })
+
+        if not matches:
+            return {"error": f"No user found matching '{name}'", "matches": []}
+
+        return {
+            "matches": matches,
+            "count": len(matches),
+            "found": True,
         }
