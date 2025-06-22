@@ -251,7 +251,7 @@ VS Code now has built-in MCP support with GitHub Copilot and Agent Mode. Add to 
 - `get_team_workload` - See task distribution across team members
 - `get_task_analytics` - Get velocity metrics and completion rates
 
-### 👤 User Management  
+### 👤 User Management
 - `list_users` - List all users in workspace
 - `get_current_user` - Get current authenticated user details
 - `find_user_by_name` - Find users by name or email

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+
 from clickup_mcp.client import ClickUpClient
 from clickup_mcp.config import Config
 

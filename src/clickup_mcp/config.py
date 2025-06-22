@@ -120,7 +120,7 @@ class Config(BaseModel):
         for key, value in os.environ.items():
             if key.startswith(prefix) and value:
                 # Remove prefix and convert to lowercase for field mapping
-                field_name = key[len(prefix):].lower()
+                field_name = key[len(prefix) :].lower()
                 env_data[field_name] = value
 
         return env_data
