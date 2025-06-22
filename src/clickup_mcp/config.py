@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from platformdirs import user_config_dir
-from pydantic import BaseModel, Field, SecretStr, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
 
 class ConfigError(Exception):
@@ -115,14 +115,14 @@ class Config(BaseModel):
         """Get environment variables with our prefix only."""
         env_data = {}
         prefix = "CLICKUP_MCP_"
-        
+
         # Only process environment variables with our specific prefix
         for key, value in os.environ.items():
             if key.startswith(prefix) and value:
                 # Remove prefix and convert to lowercase for field mapping
                 field_name = key[len(prefix):].lower()
                 env_data[field_name] = value
-                
+
         return env_data
 
     def save_to_file(self, path: Optional[Path] = None) -> None:

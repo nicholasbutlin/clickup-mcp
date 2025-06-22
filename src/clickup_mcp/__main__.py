@@ -19,10 +19,10 @@ console = Console()
 def setup_logging(debug: bool = False) -> None:
     """Configure logging with rich output."""
     level = logging.DEBUG if debug else logging.INFO
-    
+
     # When running as MCP server, redirect all logs to stderr
     stderr_console = Console(stderr=True)
-    
+
     logging.basicConfig(
         level=level,
         format="%(message)s",
@@ -48,7 +48,7 @@ def serve(debug: bool) -> None:
     """Run the MCP server."""
     # Create a stderr console for server mode
     stderr_console = Console(stderr=True)
-    
+
     try:
         config = Config()
         server = ClickUpMCPServer(config)

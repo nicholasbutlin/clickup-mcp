@@ -1,7 +1,6 @@
 """Tests for utility functions."""
 
 import pytest
-
 from clickup_mcp.utils import format_task_url, parse_duration, parse_task_id
 
 
