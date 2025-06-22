@@ -19,10 +19,14 @@ console = Console()
 def setup_logging(debug: bool = False) -> None:
     """Configure logging with rich output."""
     level = logging.DEBUG if debug else logging.INFO
+    
+    # When running as MCP server, redirect all logs to stderr
+    stderr_console = Console(stderr=True)
+    
     logging.basicConfig(
         level=level,
         format="%(message)s",
-        handlers=[RichHandler(console=console, rich_tracebacks=True)],
+        handlers=[RichHandler(console=stderr_console, rich_tracebacks=True)],
     )
 
 
@@ -42,27 +46,30 @@ def cli(ctx: click.Context, debug: bool) -> None:
 @click.option("--debug", is_flag=True, help="Enable debug logging")
 def serve(debug: bool) -> None:
     """Run the MCP server."""
+    # Create a stderr console for server mode
+    stderr_console = Console(stderr=True)
+    
     try:
         config = Config()
         server = ClickUpMCPServer(config)
 
-        console.print("[green]Starting ClickUp MCP Server...[/green]")
+        stderr_console.print("[green]Starting ClickUp MCP Server...[/green]")
         asyncio.run(server.run())
 
     except ConfigError as e:
-        console.print(f"[red]Configuration error:[/red] {e}")
-        console.print("\nPlease configure your API key using one of these methods:")
-        console.print("1. Create ~/.config/clickup-mcp/config.json")
-        console.print("2. Set CLICKUP_MCP_API_KEY environment variable")
-        console.print("\nRun 'clickup-mcp check-config' for more details.")
+        stderr_console.print(f"[red]Configuration error:[/red] {e}")
+        stderr_console.print("\nPlease configure your API key using one of these methods:")
+        stderr_console.print("1. Create ~/.config/clickup-mcp/config.json")
+        stderr_console.print("2. Set CLICKUP_MCP_API_KEY environment variable")
+        stderr_console.print("\nRun 'clickup-mcp check-config' for more details.")
         sys.exit(1)
     except KeyboardInterrupt:
-        console.print("\n[yellow]Server stopped by user[/yellow]")
+        stderr_console.print("\n[yellow]Server stopped by user[/yellow]")
         sys.exit(0)
     except Exception as e:
-        console.print(f"[red]Unexpected error:[/red] {e}")
+        stderr_console.print(f"[red]Unexpected error:[/red] {e}")
         if debug:
-            console.print_exception()
+            stderr_console.print_exception()
         sys.exit(1)
 
 
