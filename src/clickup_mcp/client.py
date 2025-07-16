@@ -6,7 +6,18 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from .config import Config
-from .models import CreateTaskRequest, Folder, Space, Task, UpdateTaskRequest, Workspace
+from .models import (
+    CreateDocRequest,
+    CreateTaskRequest,
+    Document,
+    DocumentFolder,
+    Folder,
+    Space,
+    Task,
+    UpdateDocRequest,
+    UpdateTaskRequest,
+    Workspace,
+)
 from .models import List as ClickUpList
 
 logger = logging.getLogger(__name__)
@@ -459,3 +470,68 @@ class ClickUpClient:
             # If team endpoint fails, fallback to original method
             logger.warning(f"Team endpoint failed for subtasks: {e}")
             return []
+
+    # Docs endpoints
+
+    async def create_doc(self, folder_id: str, doc: "CreateDocRequest") -> "Document":
+        """Create a new document."""
+        data = await self._request(
+            "POST",
+            f"/folder/{folder_id}/doc",
+            json=doc.model_dump(exclude_none=True),
+        )
+        return Document(**data)
+
+    async def get_doc(self, doc_id: str) -> "Document":
+        """Retrieve a document by ID."""
+        data = await self._request("GET", f"/doc/{doc_id}")
+        return Document(**data)
+
+    async def update_doc(self, doc_id: str, updates: "UpdateDocRequest") -> "Document":
+        """Update an existing document."""
+        data = await self._request(
+            "PUT",
+            f"/doc/{doc_id}",
+            json=updates.model_dump(exclude_none=True),
+        )
+        return Document(**data)
+
+    async def list_docs(
+        self, folder_id: Optional[str] = None, space_id: Optional[str] = None
+    ) -> List["Document"]:
+        """List documents in a folder or space."""
+        if folder_id:
+            path = f"/folder/{folder_id}/doc"
+        elif space_id:
+            path = f"/space/{space_id}/doc"
+        else:
+            raise ValueError("Either folder_id or space_id must be provided")
+
+        data = await self._request("GET", path)
+        docs = data.get("docs", [])
+        return [Document(**d) for d in docs]
+
+    async def search_docs(
+        self,
+        workspace_id: Optional[str] = None,
+        query: Optional[str] = None,
+    ) -> List["Document"]:
+        """Search documents across a workspace."""
+        workspace_id = workspace_id or self.config.default_workspace_id
+        if not workspace_id:
+            workspaces = await self.get_workspaces()
+            if not workspaces:
+                raise ClickUpAPIError("No workspaces found")
+            workspace_id = workspaces[0].id
+
+        params: Dict[str, Any] = {}
+        if query:
+            params["query"] = query
+
+        data = await self._request(
+            "GET",
+            f"/team/{workspace_id}/doc",
+            params=params,
+        )
+        docs = data.get("docs", [])
+        return [Document(**d) for d in docs]

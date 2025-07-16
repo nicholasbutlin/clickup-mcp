@@ -267,3 +267,36 @@ class UpdateTaskRequest(BaseModel):
     start_date_time: Optional[bool] = None
     archived: Optional[bool] = None
     parent: Optional[str] = None
+
+
+class Document(BaseModel):
+    """ClickUp document model."""
+
+    id: str
+    name: str
+    content: Optional[str] = None
+    folder: Optional[Dict[str, Any]] = None
+    space: Optional[Dict[str, Any]] = None
+    url: Optional[str] = None
+
+
+class DocumentFolder(BaseModel):
+    """Folder for organizing documents."""
+
+    id: str
+    name: str
+    space: Optional[Dict[str, Any]] = None
+
+
+class CreateDocRequest(BaseModel):
+    """Request model for creating a document."""
+
+    name: str
+    content: str
+
+
+class UpdateDocRequest(BaseModel):
+    """Request model for updating a document."""
+
+    name: Optional[str] = None
+    content: Optional[str] = None

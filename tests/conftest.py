@@ -188,3 +188,16 @@ def sample_comment():
         "resolved": False,
         "assignee": None,
     }
+
+
+@pytest.fixture
+def sample_document():
+    """Sample document data for testing."""
+    return {
+        "id": "doc123",
+        "name": "Sample Doc",
+        "content": "Hello world",
+        "folder": {"id": "folder123", "name": "Docs"},
+        "space": {"id": "space123", "name": "Test Space"},
+        "url": "https://app.clickup.com/docs/doc123",
+    }

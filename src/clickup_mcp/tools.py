@@ -8,7 +8,13 @@ from typing import Any, Callable, Dict, List, Optional
 from mcp.types import Tool
 
 from .client import ClickUpAPIError, ClickUpClient
-from .models import CreateTaskRequest, Task, UpdateTaskRequest
+from .models import (
+    CreateDocRequest,
+    CreateTaskRequest,
+    Task,
+    UpdateDocRequest,
+    UpdateTaskRequest,
+)
 from .utils import format_task_url, parse_duration, parse_task_id
 
 logger = logging.getLogger(__name__)
@@ -38,6 +44,12 @@ class ClickUpTools:
             "list_folders": self.list_folders,
             "list_lists": self.list_lists,
             "find_list_by_name": self.find_list_by_name,
+            # Docs management
+            "create_doc": self.create_doc,
+            "get_doc": self.get_doc,
+            "update_doc": self.update_doc,
+            "list_docs": self.list_docs,
+            "search_docs": self.search_docs,
             # Bulk operations
             "bulk_update_tasks": self.bulk_update_tasks,
             "bulk_move_tasks": self.bulk_move_tasks,
@@ -432,6 +444,66 @@ class ClickUpTools:
                         },
                     },
                     "required": ["tasks", "list_id"],
+                },
+            ),
+            # Docs management
+            Tool(
+                name="create_doc",
+                description="Create a new document in a folder",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "folder_id": {"type": "string", "description": "Folder ID"},
+                        "title": {"type": "string", "description": "Document title"},
+                        "content": {"type": "string", "description": "Document content"},
+                    },
+                    "required": ["folder_id", "title", "content"],
+                },
+            ),
+            Tool(
+                name="get_doc",
+                description="Get a document by ID",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "doc_id": {"type": "string", "description": "Document ID"},
+                    },
+                    "required": ["doc_id"],
+                },
+            ),
+            Tool(
+                name="update_doc",
+                description="Update an existing document",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "doc_id": {"type": "string", "description": "Document ID"},
+                        "title": {"type": "string", "description": "New title"},
+                        "content": {"type": "string", "description": "New content"},
+                    },
+                    "required": ["doc_id"],
+                },
+            ),
+            Tool(
+                name="list_docs",
+                description="List documents in a folder or space",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "folder_id": {"type": "string", "description": "Folder ID"},
+                        "space_id": {"type": "string", "description": "Space ID"},
+                    },
+                },
+            ),
+            Tool(
+                name="search_docs",
+                description="Search documents across workspace",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Search query"},
+                        "workspace_id": {"type": "string", "description": "Workspace ID"},
+                    },
                 },
             ),
             # Analytics
@@ -1246,6 +1318,50 @@ class ClickUpTools:
             "created": len(created_tasks),
             "tasks": created_tasks,
             "linked": auto_link,
+        }
+
+    # Docs management
+
+    async def create_doc(self, folder_id: str, title: str, content: str) -> Dict[str, Any]:
+        """Create a document."""
+        doc_req = CreateDocRequest(name=title, content=content)
+        doc = await self.client.create_doc(folder_id, doc_req)
+        return {"id": doc.id, "name": doc.name}
+
+    async def get_doc(self, doc_id: str) -> Dict[str, Any]:
+        """Get a document."""
+        doc = await self.client.get_doc(doc_id)
+        return {"id": doc.id, "name": doc.name, "content": doc.content}
+
+    async def update_doc(
+        self,
+        doc_id: str,
+        title: Optional[str] = None,
+        content: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Update a document."""
+        req = UpdateDocRequest(name=title, content=content)
+        doc = await self.client.update_doc(doc_id, req)
+        return {"id": doc.id, "name": doc.name, "updated": True}
+
+    async def list_docs(
+        self, folder_id: Optional[str] = None, space_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """List documents."""
+        docs = await self.client.list_docs(folder_id=folder_id, space_id=space_id)
+        return {
+            "docs": [{"id": d.id, "name": d.name} for d in docs],
+            "count": len(docs),
+        }
+
+    async def search_docs(
+        self, query: Optional[str] = None, workspace_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Search documents."""
+        docs = await self.client.search_docs(workspace_id=workspace_id, query=query)
+        return {
+            "docs": [{"id": d.id, "name": d.name} for d in docs],
+            "count": len(docs),
         }
 
     # Analytics
