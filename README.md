@@ -22,6 +22,7 @@ Built by the [Diversio](https://diversio.com) team for streamlined AI-powered ta
 - **Comments & Collaboration** - Read and create comments on tasks
 - **User & Assignment Management** - List users, find by name/email, assign to tasks
 - **Status Management** - Update and track task statuses
+- **Docs Management** - Create and manage ClickUp Docs
 
 ### ✅ Productivity Features
 - **Bulk Operations** - Update or move multiple tasks at once
@@ -39,7 +40,6 @@ Built by the [Diversio](https://diversio.com) team for streamlined AI-powered ta
 ### ❌ What's NOT Included
 
 This server focuses on task management essentials. **Not supported:**
-- ClickUp Docs/Documents
 - Whiteboards
 - Dashboards
 - Automations/Workflows
@@ -210,7 +210,7 @@ VS Code now has built-in MCP support with GitHub Copilot and Agent Mode. Add to 
 2. In VS Code, ask GitHub Copilot: *"Can you list my ClickUp spaces using MCP tools?"*
 3. Check MCP server status with Command Palette → **"MCP: List Servers"**
 
-## Available Tools (28 Tools)
+## Available Tools (33 Tools)
 
 ### 📝 Task Management
 - `create_task` - Create new tasks
@@ -219,6 +219,13 @@ VS Code now has built-in MCP support with GitHub Copilot and Agent Mode. Add to 
 - `delete_task` - Delete tasks
 - `create_task_from_template` - Create from predefined templates
 - `create_task_chain` - Create dependent task sequences
+
+### 📄 Docs Management
+- `create_doc` - Create a new document
+- `get_doc` - Retrieve document details
+- `update_doc` - Update an existing document
+- `list_docs` - List documents in a folder or space
+- `search_docs` - Search documents across workspace
 
 ### 🔍 Task Discovery
 - `list_tasks` - List tasks with filtering options
@@ -295,7 +302,7 @@ Ask your AI assistant:
 ### Running Tests
 
 ```bash
-# Run all tests (62 tests)
+# Run all tests (72 tests)
 uv run pytest
 
 # Run with coverage

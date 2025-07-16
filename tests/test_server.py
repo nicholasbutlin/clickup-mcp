@@ -26,8 +26,8 @@ class TestClickUpMCPServer:
         """Test that all tool definitions are returned."""
         definitions = server.tools.get_tool_definitions()
 
-        # Should have all 27 tools
-        assert len(definitions) >= 24  # At least the documented tools
+        # Should have all 33 tools including docs management
+        assert len(definitions) >= 29  # At least the documented tools
 
         tool_names = [tool.name for tool in definitions]
 
@@ -44,6 +44,13 @@ class TestClickUpMCPServer:
         assert "log_time" in tool_names
         assert "create_task_from_template" in tool_names
         assert "get_team_workload" in tool_names
+
+        # Check for docs tools
+        assert "create_doc" in tool_names
+        assert "get_doc" in tool_names
+        assert "update_doc" in tool_names
+        assert "list_docs" in tool_names
+        assert "search_docs" in tool_names
 
     @pytest.mark.asyncio
     async def test_server_startup(self, server):
