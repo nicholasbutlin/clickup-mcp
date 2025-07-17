@@ -1,7 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock
 
-from clickup_mcp.client import ClickUpClient
+import pytest
 
 
 class TestDocsClient:
@@ -11,7 +10,9 @@ class TestDocsClient:
     async def test_create_doc(self, mock_client, mock_response, sample_document):
         from clickup_mcp.models import CreateDocRequest, Document
 
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, sample_document))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, sample_document)
+        )
 
         doc_req = CreateDocRequest(name="Doc", content="hello")
         result = await mock_client.create_doc("folder123", doc_req)
@@ -24,7 +25,9 @@ class TestDocsClient:
     async def test_get_doc(self, mock_client, mock_response, sample_document):
         from clickup_mcp.models import Document
 
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, sample_document))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, sample_document)
+        )
 
         result = await mock_client.get_doc("doc123")
 
@@ -51,7 +54,9 @@ class TestDocsClient:
         from clickup_mcp.models import Document
 
         docs_data = {"docs": [sample_document]}
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, docs_data))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, docs_data)
+        )
 
         result = await mock_client.list_docs(folder_id="folder123")
 
@@ -64,9 +69,13 @@ class TestDocsClient:
         from clickup_mcp.models import Document
 
         docs_data = {"docs": [sample_document]}
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, docs_data))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, docs_data)
+        )
 
-        result = await mock_client.search_docs(workspace_id="workspace123", query="design")
+        result = await mock_client.search_docs(
+            workspace_id="workspace123", query="design"
+        )
 
         assert isinstance(result, list)
         assert isinstance(result[0], Document)
