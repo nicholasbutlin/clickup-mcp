@@ -28,6 +28,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "click>=8.1.0",
     "rich>=13.0.0",
+    "openai-agents>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +43,7 @@ dev = [
 
 [project.scripts]
 clickup-mcp = "clickup_mcp.__main__:main"
+clickup-cli = "clickup_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/DiversioTeam/clickup-mcp"
