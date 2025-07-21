@@ -78,7 +78,10 @@ class ClickUpTools:
                     "type": "object",
                     "properties": {
                         "title": {"type": "string", "description": "Task title"},
-                        "description": {"type": "string", "description": "Task description"},
+                        "description": {
+                            "type": "string",
+                            "description": "Task description",
+                        },
                         "list_name": {
                             "type": "string",
                             "description": "Name of the list to create task in",
@@ -96,7 +99,10 @@ class ClickUpTools:
                             "type": "integer",
                             "description": "Priority (1=urgent, 2=high, 3=normal, 4=low)",
                         },
-                        "due_date": {"type": "string", "description": "Due date (ISO 8601 format)"},
+                        "due_date": {
+                            "type": "string",
+                            "description": "Due date (ISO 8601 format)",
+                        },
                         "time_estimate": {
                             "type": "string",
                             "description": "Time estimate (e.g., '2h 30m')",
@@ -131,7 +137,10 @@ class ClickUpTools:
                     "properties": {
                         "task_id": {"type": "string", "description": "Task ID"},
                         "title": {"type": "string", "description": "New title"},
-                        "description": {"type": "string", "description": "New description"},
+                        "description": {
+                            "type": "string",
+                            "description": "New description",
+                        },
                         "status": {"type": "string", "description": "New status"},
                         "priority": {"type": "integer", "description": "New priority"},
                         "due_date": {"type": "string", "description": "New due date"},
@@ -155,7 +164,10 @@ class ClickUpTools:
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "task_id": {"type": "string", "description": "Task ID to delete"},
+                        "task_id": {
+                            "type": "string",
+                            "description": "Task ID to delete",
+                        },
                     },
                     "required": ["task_id"],
                 },
@@ -212,7 +224,10 @@ class ClickUpTools:
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "parent_task_id": {"type": "string", "description": "Parent task ID"},
+                        "parent_task_id": {
+                            "type": "string",
+                            "description": "Parent task ID",
+                        },
                     },
                     "required": ["parent_task_id"],
                 },
@@ -235,7 +250,10 @@ class ClickUpTools:
                     "type": "object",
                     "properties": {
                         "task_id": {"type": "string", "description": "Task ID"},
-                        "comment_text": {"type": "string", "description": "Comment text"},
+                        "comment_text": {
+                            "type": "string",
+                            "description": "Comment text",
+                        },
                         "assignee": {
                             "type": "integer",
                             "description": "User ID to assign (optional)",
@@ -334,8 +352,14 @@ class ClickUpTools:
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "name": {"type": "string", "description": "List name to search for"},
-                        "space_id": {"type": "string", "description": "Space ID to search in"},
+                        "name": {
+                            "type": "string",
+                            "description": "List name to search for",
+                        },
+                        "space_id": {
+                            "type": "string",
+                            "description": "Space ID to search in",
+                        },
                     },
                     "required": ["name"],
                 },
@@ -371,7 +395,10 @@ class ClickUpTools:
                             "items": {"type": "string"},
                             "description": "List of task IDs to move",
                         },
-                        "target_list_id": {"type": "string", "description": "Target list ID"},
+                        "target_list_id": {
+                            "type": "string",
+                            "description": "Target list ID",
+                        },
                     },
                     "required": ["task_ids", "target_list_id"],
                 },
@@ -384,8 +411,14 @@ class ClickUpTools:
                     "type": "object",
                     "properties": {
                         "user_id": {"type": "integer", "description": "User ID"},
-                        "start_date": {"type": "string", "description": "Start date (ISO 8601)"},
-                        "end_date": {"type": "string", "description": "End date (ISO 8601)"},
+                        "start_date": {
+                            "type": "string",
+                            "description": "Start date (ISO 8601)",
+                        },
+                        "end_date": {
+                            "type": "string",
+                            "description": "End date (ISO 8601)",
+                        },
                     },
                 },
             ),
@@ -396,8 +429,14 @@ class ClickUpTools:
                     "type": "object",
                     "properties": {
                         "task_id": {"type": "string", "description": "Task ID"},
-                        "duration": {"type": "string", "description": "Duration (e.g., '2h 30m')"},
-                        "description": {"type": "string", "description": "Optional description"},
+                        "duration": {
+                            "type": "string",
+                            "description": "Duration (e.g., '2h 30m')",
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Optional description",
+                        },
                     },
                     "required": ["task_id", "duration"],
                 },
@@ -409,12 +448,18 @@ class ClickUpTools:
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "template_name": {"type": "string", "description": "Template name"},
+                        "template_name": {
+                            "type": "string",
+                            "description": "Template name",
+                        },
                         "customizations": {
                             "type": "object",
                             "description": "Customizations to apply to template",
                         },
-                        "list_id": {"type": "string", "description": "List ID for the new task"},
+                        "list_id": {
+                            "type": "string",
+                            "description": "List ID for the new task",
+                        },
                     },
                     "required": ["template_name", "list_id"],
                 },
@@ -437,7 +482,10 @@ class ClickUpTools:
                             },
                             "description": "List of tasks to create in sequence",
                         },
-                        "list_id": {"type": "string", "description": "List ID for the tasks"},
+                        "list_id": {
+                            "type": "string",
+                            "description": "List ID for the tasks",
+                        },
                         "auto_link": {
                             "type": "boolean",
                             "description": "Automatically link tasks as dependencies",
@@ -455,7 +503,10 @@ class ClickUpTools:
                     "properties": {
                         "folder_id": {"type": "string", "description": "Folder ID"},
                         "title": {"type": "string", "description": "Document title"},
-                        "content": {"type": "string", "description": "Document content"},
+                        "content": {
+                            "type": "string",
+                            "description": "Document content",
+                        },
                     },
                     "required": ["folder_id", "title", "content"],
                 },
@@ -502,7 +553,10 @@ class ClickUpTools:
                     "type": "object",
                     "properties": {
                         "query": {"type": "string", "description": "Search query"},
-                        "workspace_id": {"type": "string", "description": "Workspace ID"},
+                        "workspace_id": {
+                            "type": "string",
+                            "description": "Workspace ID",
+                        },
                     },
                 },
             ),
@@ -596,14 +650,18 @@ class ClickUpTools:
 
     # Tool implementations
 
-    async def _resolve_task_id(self, task_id: str, include_subtasks: bool = False) -> Task:
+    async def _resolve_task_id(
+        self, task_id: str, include_subtasks: bool = False
+    ) -> Task:
         """Smart task ID resolution that handles both internal and custom IDs."""
         # Parse task ID to determine if it might be a custom ID
         parsed_id, custom_type = parse_task_id(task_id, self.client.config.id_patterns)
 
         # Try direct lookup first (works for both internal and custom IDs)
         try:
-            return await self.client.get_task(parsed_id, include_subtasks=include_subtasks)
+            return await self.client.get_task(
+                parsed_id, include_subtasks=include_subtasks
+            )
         except ClickUpAPIError as direct_error:
             # If it might be a custom ID, try with custom_task_ids=true
             if custom_type or "-" in parsed_id:
@@ -726,7 +784,9 @@ class ClickUpTools:
             result["due_date"] = task.due_date.isoformat()
 
         if task.time_estimate:
-            result["time_estimate"] = task.time_estimate // 1000 // 60  # Convert to minutes
+            result["time_estimate"] = (
+                task.time_estimate // 1000 // 60
+            )  # Convert to minutes
 
         if task.time_spent:
             result["time_spent"] = task.time_spent // 1000 // 60  # Convert to minutes
@@ -1059,7 +1119,9 @@ class ClickUpTools:
                 lists = await self.client.get_lists(space_id=space.id)
                 all_lists.extend(lists)
         else:
-            all_lists = await self.client.get_lists(folder_id=folder_id, space_id=space_id)
+            all_lists = await self.client.get_lists(
+                folder_id=folder_id, space_id=space_id
+            )
 
         return {
             "lists": [
@@ -1074,7 +1136,9 @@ class ClickUpTools:
             "count": len(all_lists),
         }
 
-    async def find_list_by_name(self, name: str, space_id: Optional[str] = None) -> Dict[str, Any]:
+    async def find_list_by_name(
+        self, name: str, space_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Find list by name."""
         lst = await self.client.find_list_by_name(name, space_id)
 
@@ -1121,7 +1185,9 @@ class ClickUpTools:
 
         return results
 
-    async def bulk_move_tasks(self, task_ids: List[str], target_list_id: str) -> Dict[str, Any]:
+    async def bulk_move_tasks(
+        self, task_ids: List[str], target_list_id: str
+    ) -> Dict[str, Any]:
         """Move multiple tasks to a different list."""
         results = {"moved": [], "failed": []}
 
@@ -1154,8 +1220,12 @@ class ClickUpTools:
         if not end_date:
             end_date = datetime.now().isoformat()
 
-        start_ts = int(datetime.fromisoformat(start_date.replace("Z", "+00:00")).timestamp() * 1000)
-        end_ts = int(datetime.fromisoformat(end_date.replace("Z", "+00:00")).timestamp() * 1000)
+        start_ts = int(
+            datetime.fromisoformat(start_date.replace("Z", "+00:00")).timestamp() * 1000
+        )
+        end_ts = int(
+            datetime.fromisoformat(end_date.replace("Z", "+00:00")).timestamp() * 1000
+        )
 
         # Get time entries
         params = {
@@ -1214,7 +1284,9 @@ class ClickUpTools:
             workspaces = await self.client.get_workspaces()
             workspace_id = workspaces[0].id
 
-        await self.client._request("POST", f"/team/{workspace_id}/time_entries", json=payload)
+        await self.client._request(
+            "POST", f"/team/{workspace_id}/time_entries", json=payload
+        )
 
         return {
             "logged": True,
@@ -1322,7 +1394,9 @@ class ClickUpTools:
 
     # Docs management
 
-    async def create_doc(self, folder_id: str, title: str, content: str) -> Dict[str, Any]:
+    async def create_doc(
+        self, folder_id: str, title: str, content: str
+    ) -> Dict[str, Any]:
         """Create a document."""
         doc_req = CreateDocRequest(name=title, content=content)
         doc = await self.client.create_doc(folder_id, doc_req)
@@ -1347,12 +1421,25 @@ class ClickUpTools:
     async def list_docs(
         self, folder_id: Optional[str] = None, space_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """List documents."""
+        """List documents in a folder or space.
+
+        Note: ClickUp's docs API may not be available in all plans or regions.
+        """
         docs = await self.client.list_docs(folder_id=folder_id, space_id=space_id)
-        return {
+
+        result = {
             "docs": [{"id": d.id, "name": d.name} for d in docs],
             "count": len(docs),
         }
+
+        # Add helpful message if no docs found
+        if len(docs) == 0:
+            result["message"] = (
+                "No documents found. Note: ClickUp's docs API may not be "
+                "available in all plans or regions."
+            )
+
+        return result
 
     async def search_docs(
         self, query: Optional[str] = None, workspace_id: Optional[str] = None
@@ -1414,7 +1501,9 @@ class ClickUpTools:
             "total_tasks": len(tasks),
         }
 
-    async def get_task_analytics(self, space_id: str, period_days: int = 30) -> Dict[str, Any]:
+    async def get_task_analytics(
+        self, space_id: str, period_days: int = 30
+    ) -> Dict[str, Any]:
         """Get analytics for tasks."""
         # Calculate date range
         end_date = datetime.now()
@@ -1435,7 +1524,9 @@ class ClickUpTools:
         completion_times = []
         for task in tasks:
             if task.date_closed and task.date_created:
-                time_to_complete = (task.date_closed - task.date_created).total_seconds() / 3600
+                time_to_complete = (
+                    task.date_closed - task.date_created
+                ).total_seconds() / 3600
                 completion_times.append(time_to_complete)
 
         avg_completion_time = (

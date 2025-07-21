@@ -1,6 +1,6 @@
 """Tests for ClickUp API client."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from httpx import Response
@@ -80,7 +80,9 @@ class TestClickUpClient:
         from clickup_mcp.models import Task, UpdateTaskRequest
 
         updated_task = {**sample_task, "name": "Updated Task"}
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, updated_task))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, updated_task)
+        )
 
         update_request = UpdateTaskRequest(name="Updated Task")
         result = await mock_client.update_task("abc123", update_request)
@@ -105,7 +107,9 @@ class TestClickUpClient:
         from clickup_mcp.models import Task
 
         tasks_response = {"tasks": [sample_task]}
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, tasks_response))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, tasks_response)
+        )
 
         result = await mock_client.get_tasks(list_id="list123")
 
@@ -121,7 +125,9 @@ class TestClickUpClient:
         from clickup_mcp.models import Task
 
         search_response = {"tasks": [sample_task]}
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, search_response))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, search_response)
+        )
 
         result = await mock_client.search_tasks(
             workspace_id="workspace123",
@@ -147,7 +153,9 @@ class TestClickUpClient:
                 "initials": "TU",
             }
         }
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, user_data))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, user_data)
+        )
 
         result = await mock_client.get_current_user()
 
@@ -174,13 +182,19 @@ class TestClickUpClient:
                     "id": "group2",
                     "name": "Group 2",
                     "members": [
-                        {"id": 2, "username": "user2", "email": "user2@example.com"},  # Duplicate
+                        {
+                            "id": 2,
+                            "username": "user2",
+                            "email": "user2@example.com",
+                        },  # Duplicate
                         {"id": 3, "username": "user3", "email": "user3@example.com"},
                     ],
                 },
             ]
         }
-        mock_client.client.request = AsyncMock(return_value=mock_response(200, groups_data))
+        mock_client.client.request = AsyncMock(
+            return_value=mock_response(200, groups_data)
+        )
 
         result = await mock_client.get_workspace_members("workspace123")
 
@@ -224,7 +238,9 @@ class TestClickUpClient:
         # Mock a 404 response - the client checks status_code and raises ClickUpAPIError
         error_response = mock_response(404, {})
         error_response.text = "Task not found"
-        error_response.json.side_effect = Exception("No JSON")  # Simulate JSON parse error
+        error_response.json.side_effect = Exception(
+            "No JSON"
+        )  # Simulate JSON parse error
 
         mock_client.client.request = AsyncMock(return_value=error_response)
 
@@ -233,6 +249,61 @@ class TestClickUpClient:
 
         assert exc_info.value.status_code == 404
         assert "Task not found" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_request_v3_method(self, mock_client, mock_response):
+        """Test the _request_v3 method for v3 API endpoints."""
+        # Mock successful v3 response
+        response_data = {"docs": [{"id": "doc123", "name": "Test Doc"}]}
+        mock_response_obj = mock_response(200, response_data)
+
+        # We need to mock httpx.AsyncClient since _request_v3 creates its own client
+        with patch("httpx.AsyncClient") as mock_async_client:
+            mock_v3_client = AsyncMock()
+            mock_async_client.return_value = mock_v3_client
+            mock_v3_client.request = AsyncMock(return_value=mock_response_obj)
+            mock_v3_client.aclose = AsyncMock()
+
+            result = await mock_client._request_v3("GET", "/workspaces/123/docs")
+
+            # Verify the v3 client was created with correct base URL
+            mock_async_client.assert_called_once_with(
+                base_url="https://api.clickup.com/api/v3",
+                headers=mock_client.config.headers,
+                timeout=30.0,
+            )
+
+            # Verify the request was made
+            mock_v3_client.request.assert_called_once_with(
+                "GET", "/workspaces/123/docs"
+            )
+
+            # Verify the client was closed
+            mock_v3_client.aclose.assert_called_once()
+
+            # Verify the response
+            assert result == response_data
+
+    @pytest.mark.asyncio
+    async def test_request_v3_error_handling(self, mock_client, mock_response):
+        """Test _request_v3 error handling."""
+        # Mock error response
+        error_response = mock_response(401, {"err": "Unauthorized"})
+
+        with patch("httpx.AsyncClient") as mock_async_client:
+            mock_v3_client = AsyncMock()
+            mock_async_client.return_value = mock_v3_client
+            mock_v3_client.request = AsyncMock(return_value=error_response)
+            mock_v3_client.aclose = AsyncMock()
+
+            with pytest.raises(ClickUpAPIError) as exc_info:
+                await mock_client._request_v3("GET", "/workspaces/123/docs")
+
+            assert exc_info.value.status_code == 401
+            assert "Unauthorized" in str(exc_info.value)
+
+            # Verify the client was still closed even on error
+            mock_v3_client.aclose.assert_called_once()
 
     # Note: Methods like update_task_status, assign_task, bulk_update_tasks, log_time
     # don't exist in the client layer - they are tools layer methods.
